@@ -1,0 +1,47 @@
+name: sahana-evaluation
+x-eden: &eden
+  image: sahana-evaluation:6.3
+  build: .
+  init: true
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD", "python", "-c", "import os, urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/' + os.environ['EDEN_APPLICATION'] + '/default/index', timeout=30).read()"]
+    interval: 30s
+    timeout: 35s
+    start_period: 180s
+    retries: 3
+services:
+  default:
+    <<: *eden
+    environment:
+      EDEN_TEMPLATE: default
+      EDEN_APPLICATION: eden_default
+      EDEN_PUBLIC_URL: http://127.0.0.1:8001
+    ports: ["127.0.0.1:8001:8000"]
+    volumes:
+      - default-data:/data
+      - ./config/000_config.py:/config/000_config.py:ro
+  skeleton:
+    <<: *eden
+    environment:
+      EDEN_TEMPLATE: skeleton
+      EDEN_APPLICATION: eden_skeleton
+      EDEN_PUBLIC_URL: http://127.0.0.1:8002
+    ports: ["127.0.0.1:8002:8000"]
+    volumes:
+      - skeleton-data:/data
+      - ./config/000_config.py:/config/000_config.py:ro
+  safire:
+    <<: *eden
+    environment:
+      EDEN_TEMPLATE: SAFIRE
+      EDEN_APPLICATION: eden_safire
+      EDEN_PUBLIC_URL: http://127.0.0.1:8003
+    ports: ["127.0.0.1:8003:8000"]
+    volumes:
+      - safire-data:/data
+      - ./config/000_config.py:/config/000_config.py:ro
+volumes:
+  default-data:
+  skeleton-data:
+  safire-data:

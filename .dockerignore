@@ -1,0 +1,9 @@
+**
+!requirements.lock
+!entrypoint.sh
+!source/
+!source/web2py/
+!source/web2py/**
+**/__pycache__
+**/*.pyc
+**/.git
