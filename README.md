@@ -185,3 +185,20 @@ python3 scripts/platform_test.py
 ```
 
 El script requiere requests y beautifulsoup4. Lee las credenciales como datos, usa exclusivamente formularios y APIs nativas y guarda las contraseñas técnicas aleatorias fuera de Git con permisos 600. Aprovisiona dos organizaciones sintéticas identificables, roles y usuarios sin privilegios administrativos. Comprueba creación, consulta y actualización propias, rechazo de consultas cruzadas, creación en una organización ajena y administración de catálogos. Los datos sintéticos se conservan para repetir los mismos casos, sin personas reales ni acceso directo a la base de datos. Los endpoints interactivos nativos pueden denegar mediante redirección 303 al índice; las representaciones JSON deniegan con 403/404.
+
+## Recursos nativos (07C.1)
+
+SUPPLY mantiene el catálogo; INV administra almacenes, existencias, ajustes y movimientos; REQ administra solicitudes, compromisos y cumplimiento. ASSET, VEH y HRM permanecen habilitados como en default. El catálogo no se duplica en Java. Los permisos de catálogo quedan reservados a ADMIN/LOGS_ADMIN; los operadores técnicos de recursos consultan el catálogo y operan sus propios sitios, sin privilegios administrativos ni permisos de personas otorgados por este flujo.
+
+La plantilla asigna los registros logísticos a la organización del operador y valida sitios mediante auth.permitted_facilities, conservando las validaciones de Eden. No se habilita edición directa de cantidades: los datos de prueba utilizan el ajuste nativo de inventario y su cierre. Los compromisos se registran mediante los componentes de REQ; no se calculan ni se descuentan existencias desde Jakarta.
+
+Prueba dirigida posterior a 07B.2, reutilizando sus organizaciones y los helpers de formularios/APIs:
+
+```sh
+export EDEN_TEST_IDENTITIES="$HOME/.config/disaster-management-platform/eden-platform-resources-test.json"
+python3 scripts/resources_test.py
+```
+
+Conserva EDEN_TEST_URL y EDEN_ADMIN_CONFIG del ejemplo anterior. Las cuentas técnicas de recursos son distintas de las de personas. Comprueba almacenes propios y ajenos, catálogo de solo lectura para runtime, ajustes nativos con 10 unidades sintéticas, solicitudes y compromisos de 2 unidades, aislamiento de existencias/solicitudes/compromisos y rechazo de sitios ajenos. El aprovisionamiento reutiliza IDs nativos obtenidos por HTTP; nunca interpreta el ID de un desastre .NET como ID Eden.
+
+Alcance verificado: operaciones nativas locales y aislamiento organizacional. No se afirma entrega física de suministros, cobertura de todos los módulos de Eden, SSO ni integración financiera. El compromiso no equivale a entrega. La financiación de Reconstrucción permanece separada de inventarios. Los datos de prueba están identificados con Platform07B/Platform07C y no contienen personas reales. No se modificaron otros despliegues ni se implementaron endpoints duplicados para pantallas futuras.
