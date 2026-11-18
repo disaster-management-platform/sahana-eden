@@ -166,3 +166,22 @@ Los cuatro módulos comunes son `default`, `admin`, `appadmin`, `errors`. `appad
 4. **Mensajería:** faltan pyserial para módem serie y sgmllib3k para importación de feeds. Correo/SMS y otros canales requieren servidor o proveedor configurado; no se enviaron mensajes. Los módulos msg de default/SAFIRE se probaron solo como interfaz accesible.
 5. **Procesamiento programado e integraciones:** los modelos crean tareas del scheduler, pero este despliegue no inicia workers. Sincronización remota, tareas periódicas, notificaciones y conectores no están validados. No se añadieron servicios que no fueran necesarios para las pruebas interactivas.
 6. **Alcance:** Rocket y SQLite sirven para evaluación local. No se realizaron pruebas de carga, auditoría integral de seguridad, flujos completos de logística, familias, asistencia, proyectos o daños, ni configuración de producción. Las cuentas demo y los permisos heredados deben revisarse antes de cualquier despliegue real.
+
+## Plantilla de plataforma: personas afectadas (07B.2)
+
+El servicio `default` utiliza ahora `platform`, derivada de `default`. Conserva los módulos existentes y habilita DVR, CR y EVENT; PR, SUPPLY, INV y REQ siguen siendo nativos. `templates/platform` se incluye en la imagen y se monta de solo lectura en desarrollo. `docker compose up -d --no-build default` reutiliza la imagen existente y conserva el volumen; una compilación posterior incorpora la misma plantilla. Las otras dos plantillas no cambian.
+
+La política 7 de Eden aplica realms jerárquicos. Los registros personales y familiares creados por operadores pertenecen a su organización; expedientes y refugios validan la organización y establecen su propietario mediante callbacks nativos. No se concede acceso global a personas utilizando el permiso del directorio de organizaciones. Las cuentas históricas y sus registros no se reasignan automáticamente.
+
+Se conservan los flujos nativos `/pr/person`, `/pr/group`, `/dvr/case` y `/cr/shelter`, sus componentes y representaciones REST `.json`. Eden valida y persiste; Java no consulta tablas ni replica sus reglas. No se añaden endpoints alternativos sin un consumidor implementado. El acceso web requiere sesión propia de Eden; un JWT de la plataforma no se convierte en una sesión administrativa.
+
+Validación reproducible sobre la instancia local:
+
+```sh
+export EDEN_TEST_URL=http://127.0.0.1:8001/eden_default
+export EDEN_ADMIN_CONFIG="$HOME/.config/disaster-management-platform/eden-admin.env"
+export EDEN_TEST_IDENTITIES="$HOME/.config/disaster-management-platform/eden-platform-test.json"
+python3 scripts/platform_test.py
+```
+
+El script requiere requests y beautifulsoup4. Lee las credenciales como datos, usa exclusivamente formularios y APIs nativas y guarda las contraseñas técnicas aleatorias fuera de Git con permisos 600. Aprovisiona dos organizaciones sintéticas identificables, roles y usuarios sin privilegios administrativos. Comprueba creación, consulta y actualización propias, rechazo de consultas cruzadas, creación en una organización ajena y administración de catálogos. Los datos sintéticos se conservan para repetir los mismos casos, sin personas reales ni acceso directo a la base de datos. Los endpoints interactivos nativos pueden denegar mediante redirección 303 al índice; las representaciones JSON deniegan con 403/404.

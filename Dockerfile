@@ -10,6 +10,7 @@ RUN mv applications/eden /opt/eden \
       ln -s /data/$directory /opt/eden/$directory; \
     done \
     && ln -s /config/000_config.py /opt/eden/models/000_config.py
+COPY templates/platform /opt/eden/modules/templates/platform
 COPY entrypoint.sh /usr/local/bin/eden-entrypoint
 EXPOSE 8000
 ENTRYPOINT ["sh", "/usr/local/bin/eden-entrypoint"]

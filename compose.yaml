@@ -14,13 +14,14 @@ services:
   default:
     <<: *eden
     environment:
-      EDEN_TEMPLATE: default
+      EDEN_TEMPLATE: platform
       EDEN_APPLICATION: eden_default
       EDEN_PUBLIC_URL: http://127.0.0.1:8001
     ports: ["127.0.0.1:8001:8000"]
     volumes:
       - default-data:/data
       - ./config/000_config.py:/config/000_config.py:ro
+      - ./templates/platform:/opt/eden/modules/templates/platform:ro
   skeleton:
     <<: *eden
     environment:
