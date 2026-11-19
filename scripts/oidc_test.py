@@ -1,5 +1,5 @@
 """Local real Keycloak/Eden SSO checks; no identity or ACL is inferred from email."""
-import os,json,time,base64,hashlib,hmac,struct
+import os,json
 from pathlib import Path
 from urllib.parse import urljoin,urlsplit
 import requests
@@ -23,15 +23,7 @@ def login(label):
         soup=BeautifulSoup(response.text,'html.parser')
         if soup.select_one('input[name=username]'):
             response=step(session,response,{'username':users[label]['username'],'password':users[label]['password']});continue
-        if soup.select_one('input[name=totpSecret]'):
-            manual=soup.select_one('a[href*=manual]')
-            if not soup.select_one('#kc-totp-secret-key') and manual:
-                response=session.get(urljoin(response.url,manual['href']),timeout=15);soup=BeautifulSoup(response.text,'html.parser')
-            seed=soup.select_one('#kc-totp-secret-key').get_text(strip=True).replace(' ','')
-            secret=base64.b32decode(seed+'='*((-len(seed))%8),casefold=True)
-            digest=hmac.new(secret,struct.pack('>Q',int(time.time())//30),hashlib.sha256).digest();offset=digest[-1]&15
-            code=str((struct.unpack('>I',digest[offset:offset+4])[0]&0x7fffffff)%1000000).zfill(6)
-            response=step(session,response,{'totp':code,'userLabel':'Synthetic SSO'});continue
+        assert soup.select_one('input[name=otp], input[name=totp], input[name=totpSecret]') is None, 'Unexpected OTP requirement'
         return session,response
     raise AssertionError('SSO redirect limit')
 for label in ['A','B']:
@@ -39,7 +31,7 @@ for label in ['A','B']:
     own=native[label]['personId'];other=native['B' if label=='A' else 'A']['personId']
     assert session.get(base+f'/pr/person/{own}.json',timeout=15).status_code==200
     assert session.get(base+f'/pr/person/{other}.json',timeout=15).status_code in (403,404)
-    print('PASS verified issuer/subject binding, MFA and native organization isolation:',label)
+    print('PASS verified issuer/subject binding, password-only SSO and native organization isolation:',label)
 session,response=login('unmapped');assert response.status_code==403,response.status_code
 print('PASS unbound subject denied despite matching an existing native account email')
 session=requests.Session();response=session.get(base+'/default/user/login?code=invalid&state=invalid',timeout=15)

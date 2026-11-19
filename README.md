@@ -218,7 +218,7 @@ Además del archivo de entorno, exporte `EDEN_OIDC_BINDINGS_FILE` y `EDEN_OIDC_C
 
 Se verifica issuer, firma RS256, audience, expiración, nonce, state y PKCE. El código se canjea una sola vez; no se guardan tokens en la sesión. Metadatos y claves públicas se almacenan cinco minutos; ante un kid desconocido se deniega acceso hasta renovar la caché. La sesión autenticada y el logout local siguen siendo de Eden; no se afirma logout global ni revocación instantánea de sesiones existentes. Limite la exposición y no registre query strings del callback en proxies de acceso.
 
-`scripts/oidc_test.py` requiere `EDEN_TEST_URL` local, `EDEN_SSO_TEST_USERS` (credenciales sintéticas externas), `EDEN_TEST_IDENTITIES` y `EDEN_SSO_TEST_CA`. Se validaron MFA real, vínculo exacto, aislamiento A/B, rechazo de coincidencia de email sin vínculo, state inválido y acceso directo no autenticado. Esto no certifica el aislamiento logístico pendiente.
+`scripts/oidc_test.py` requiere `EDEN_TEST_URL` local con el mismo host del callback registrado (no intercambie localhost y 127.0.0.1), `EDEN_SSO_TEST_USERS` (credenciales sintéticas externas), `EDEN_TEST_IDENTITIES` y `EDEN_SSO_TEST_CA`. El flujo usa usuario/contraseña sin OTP; las pruebas verifican vínculo exacto, aislamiento A/B, rechazo de coincidencia de email sin vínculo, state inválido y acceso directo no autenticado. Esto no certifica el aislamiento logístico pendiente.
 
 ### Coordination authorization
 
