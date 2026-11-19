@@ -17,6 +17,10 @@ response = session.post(base + '/dvr/group_membership/create.json',
                         params={'viewing': 'pr_person.' + foreign},
                         data={'person_id': member}, timeout=20, allow_redirects=False)
 assert response.status_code in (403, 404)
+response = session.post(base + '/dvr/group_membership/create.json',
+                        params={'viewing': 'pr_person.' + primary},
+                        data={'person_id': foreign}, timeout=20, allow_redirects=False)
+assert response.status_code in (403, 404)
 after = rows(admin, f'/dvr/person/{foreign}/group_membership.json?limit=100')
 assert before == after
 print('PASS own family scope and foreign rejection before native side effects')

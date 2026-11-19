@@ -16,10 +16,15 @@ def references_controller(**attr):
             viewing = r.get_vars.get("viewing")
             if viewing:
                 parts = viewing.split(".", 1)
-                if len(parts) != 2 or parts[0] != "pr_person" or not parts[1].isdigit():
+                if len(parts) != 2 or parts[0] != "pr_person" or not parts[1].isascii() or not parts[1].isdecimal():
                     r.error(400, current.T("Invalid request"))
                 permission = "read" if r.http == "GET" else "update"
                 if not current.auth.s3_has_permission(permission, "pr_person", record_id=int(parts[1])):
+                    r.unauthorised()
+                member = current.request.post_vars.get("person_id")
+                if member and (not isinstance(member, str) or not member.isascii() or not member.isdecimal()):
+                    r.error(400, current.T("Invalid request"))
+                if member and not current.auth.s3_has_permission("read", "pr_person", record_id=int(member)):
                     r.unauthorised()
         result = standard_prep(r) if callable(standard_prep) else standard_prep
         if result is not False and r.representation == 'json' and r.tablename in ('pr_person', 'pr_group'):
