@@ -1,3 +1,4 @@
+import os
 from functools import partial
 from gluon import current
 from gluon.storage import Storage
@@ -6,6 +7,8 @@ from templates.default.config import config as default_config
 
 def config(settings):
     default_config(settings)
+    if os.environ.get("EDEN_OIDC_ISSUER"):
+        settings.customise_auth_user_controller = oidc_auth_controller
     settings.modules["pr"].access = None
     settings.security.policy = 7
     settings.cr.shelter_registration = True
@@ -59,3 +62,9 @@ def catalog_resource(r, tablename):
         current.s3db.configure(tablename, insertable=False, editable=False, deletable=False)
         if r.http != "GET" or r.method in ("create", "update", "delete"):
             r.unauthorised()
+
+
+def oidc_auth_controller(arg=None):
+    if arg == "login":
+        from .oidc import EdenOIDC
+        current.auth.settings.login_form = EdenOIDC()

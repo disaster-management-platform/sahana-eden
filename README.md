@@ -202,3 +202,20 @@ python3 scripts/resources_test.py
 Conserva EDEN_TEST_URL y EDEN_ADMIN_CONFIG del ejemplo anterior. Las cuentas técnicas de recursos son distintas de las de personas. Comprueba almacenes propios y ajenos, catálogo de solo lectura para runtime, ajustes nativos con 10 unidades sintéticas, solicitudes y compromisos de 2 unidades, aislamiento de existencias/solicitudes/compromisos y rechazo de sitios ajenos. El aprovisionamiento reutiliza IDs nativos obtenidos por HTTP; nunca interpreta el ID de un desastre .NET como ID Eden.
 
 Alcance verificado: operaciones nativas locales y aislamiento organizacional. No se afirma entrega física de suministros, cobertura de todos los módulos de Eden, SSO ni integración financiera. El compromiso no equivale a entrega. La financiación de Reconstrucción permanece separada de inventarios. Los datos de prueba están identificados con Platform07B/Platform07C y no contienen personas reales. No se modificaron otros despliegues ni se implementaron endpoints duplicados para pantallas futuras.
+
+## SSO OIDC con cuentas previamente autorizadas
+
+La plantilla `platform` admite Keycloak mediante `templates/platform/oidc.py` y el hook nativo `customise_auth_user_controller`. No crea usuarios ni los busca por correo. Un administrador aprovisiona primero la cuenta, organización, roles y realms en Eden. Un archivo JSON privado contiene entradas `issuer`, `subject`, `userId`, `organizationId` (plataforma) y `edenOrganizationId`. Solo un vínculo exacto permite iniciar sesión; la organización firmada debe coincidir y la cuenta nativa debe estar aprobada y desbloqueada. Las ACL siguen siendo las de Eden; los roles del token no se convierten en permisos.
+
+En el aprovisionamiento existente de Keycloak, `KC_EDEN_REDIRECT_URI` habilita el cliente confidencial `eden`, Code + PKCE S256, sin password grant ni implicit flow. Obtenga su secreto mediante administración segura. El archivo externo `EDEN_OIDC_ENV_FILE` proporciona `EDEN_OIDC_ISSUER`, `EDEN_OIDC_CLIENT_ID`, `EDEN_OIDC_CLIENT_SECRET`, `EDEN_OIDC_REDIRECT_URI`, `EDEN_OIDC_BINDINGS_FILE=/run/eden-identity-bindings.json` y `EDEN_OIDC_CA_FILE=/run/eden-identity-ca.crt`. Para la red Docker local puede configurar `EDEN_OIDC_BACKCHANNEL=https://keycloak:8443/realms/platform`: la conexión sigue verificando el certificado y el hostname del issuer público, sin desactivar TLS. El callback exige HTTPS; solo loopback de desarrollo permite HTTP con `EDEN_OIDC_LOCAL_DEVELOPMENT=true`.
+
+```sh
+docker compose build default
+docker compose -f compose.yaml -f compose.oidc.yaml up -d --no-build default
+```
+
+Además del archivo de entorno, exporte `EDEN_OIDC_BINDINGS_FILE` y `EDEN_OIDC_CA_FILE` como rutas locales de los archivos privados a montar. El overlay utiliza la red existente `platform-identity_default`; conserva el volumen de Eden. Los secretos y vínculos no se incluyen en la imagen ni Git. Sin configuración OIDC se mantiene el comportamiento anterior. Las identidades técnicas HTTP Basic conservan sus permisos nativos y no deben compartirse con usuarios.
+
+Se verifica issuer, firma RS256, audience, expiración, nonce, state y PKCE. El código se canjea una sola vez; no se guardan tokens en la sesión. Metadatos y claves públicas se almacenan cinco minutos; ante un kid desconocido se deniega acceso hasta renovar la caché. La sesión autenticada y el logout local siguen siendo de Eden; no se afirma logout global ni revocación instantánea de sesiones existentes. Limite la exposición y no registre query strings del callback en proxies de acceso.
+
+`scripts/oidc_test.py` requiere `EDEN_TEST_URL` local, `EDEN_SSO_TEST_USERS` (credenciales sintéticas externas), `EDEN_TEST_IDENTITIES` y `EDEN_SSO_TEST_CA`. Se validaron MFA real, vínculo exacto, aislamiento A/B, rechazo de coincidencia de email sin vínculo, state inválido y acceso directo no autenticado. Esto no certifica el aislamiento logístico pendiente.

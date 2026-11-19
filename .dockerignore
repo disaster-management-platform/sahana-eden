@@ -4,6 +4,9 @@
 !source/
 !source/web2py/
 !source/web2py/**
+!templates/
+!templates/platform/
+!templates/platform/**
 **/__pycache__
 **/*.pyc
 **/.git

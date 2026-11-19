@@ -1,0 +1,11 @@
+services:
+  default:
+    env_file: ["${EDEN_OIDC_ENV_FILE:?External OIDC runtime configuration required}"]
+    volumes:
+      - ${EDEN_OIDC_BINDINGS_FILE:?Explicit identity bindings required}:/run/eden-identity-bindings.json:ro
+      - ${EDEN_OIDC_CA_FILE:?Provider CA required}:/run/eden-identity-ca.crt:ro
+    networks: [default, identity]
+networks:
+  identity:
+    external: true
+    name: platform-identity_default
