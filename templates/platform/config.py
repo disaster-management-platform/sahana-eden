@@ -20,6 +20,7 @@ def config(settings):
     from .coordination import TABLES, customise, references_controller
     settings.customise_pr_person_controller = references_controller
     settings.customise_pr_group_controller = references_controller
+    settings.customise_pr_group_membership_controller = references_controller
     for resource in (*TABLES, "event_event"):
         setattr(settings, "customise_" + resource + "_resource", customise)
     for resource in ("supply_item", "supply_catalog", "supply_item_pack", "supply_item_category"):

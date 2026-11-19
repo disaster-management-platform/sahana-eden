@@ -12,6 +12,15 @@ def references_controller(**attr):
     standard_prep = s3.prep
 
     def prep(r):
+        if current.request.controller == "dvr" and current.request.function == "group_membership":
+            viewing = r.get_vars.get("viewing")
+            if viewing:
+                parts = viewing.split(".", 1)
+                if len(parts) != 2 or parts[0] != "pr_person" or not parts[1].isdigit():
+                    r.error(400, current.T("Invalid request"))
+                permission = "read" if r.http == "GET" else "update"
+                if not current.auth.s3_has_permission(permission, "pr_person", record_id=int(parts[1])):
+                    r.unauthorised()
         result = standard_prep(r) if callable(standard_prep) else standard_prep
         if result is not False and r.representation == 'json' and r.tablename in ('pr_person', 'pr_group'):
             fields = list(r.resource.get_config('list_fields') or ['id'])
