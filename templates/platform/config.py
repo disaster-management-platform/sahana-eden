@@ -17,6 +17,11 @@ def config(settings):
                         ("event", "Events")):
         settings.modules[name] = Storage(name_nice=current.T(title), module_type=10)
     settings.auth.realm_entity = realm_entity
+    from .coordination import TABLES, customise, references_controller
+    settings.customise_pr_person_controller = references_controller
+    settings.customise_pr_group_controller = references_controller
+    for resource in (*TABLES, "event_event"):
+        setattr(settings, "customise_" + resource + "_resource", customise)
     for resource in ("supply_item", "supply_catalog", "supply_item_pack", "supply_item_category"):
         setattr(settings, "customise_" + resource + "_resource", catalog_resource)
     for resource in ("dvr_case", "cr_shelter", "inv_warehouse", "inv_adj", "req_req", "req_commit"):
@@ -64,7 +69,8 @@ def catalog_resource(r, tablename):
             r.unauthorised()
 
 
-def oidc_auth_controller(arg=None):
+def oidc_auth_controller(arg=None, **attr):
     if arg == "login":
         from .oidc import EdenOIDC
         current.auth.settings.login_form = EdenOIDC()
+    return attr
